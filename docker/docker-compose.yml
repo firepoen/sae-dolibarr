@@ -1,0 +1,41 @@
+services:
+
+  mariadb:
+    image: mariadb:11
+    container_name: sae-dolibarr-db
+    restart: unless-stopped
+
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: dolibarr
+      MARIADB_USER: dolibarr
+      MARIADB_PASSWORD: dolibarr
+
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+
+  dolibarr:
+    image: dolibarr/dolibarr:latest
+    container_name: sae-dolibarr-app
+    restart: unless-stopped
+
+    depends_on:
+      - mariadb
+
+    ports:
+      - "8080:80"
+
+    environment:
+      DOLI_DB_HOST: mariadb
+      DOLI_DB_NAME: dolibarr
+      DOLI_DB_USER: dolibarr
+      DOLI_DB_PASSWORD: dolibarr
+
+    volumes:
+      - dolibarr_documents:/var/www/documents
+
+
+volumes:
+  mariadb_data:
+  dolibarr_documents:
