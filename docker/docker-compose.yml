@@ -1,42 +1,91 @@
 services:
 
+# mariadb
   mariadb:
+
+    # Image Docker utilisée : MariaDB version 11
     image: mariadb:11
+
+    # Nom donné au conteneur
     container_name: sae-dolibarr-db
+
+    # Redémarre automatiquement le conteneur 
     restart: unless-stopped
 
+    # Variables utilisées lors de l'initialisation de MariaDB
     environment:
+
+      # Mot de passe du compte administrateur root de MariaDB
       MARIADB_ROOT_PASSWORD: root
+
+      # Base de données créée automatiquement au premier démarrage
       MARIADB_DATABASE: dolibarr
+
+      # Création d'un utilisateur dédié à Dolibarr
       MARIADB_USER: dolibarr
+
+      # Mot de passe de l'utilisateur Dolibarr
       MARIADB_PASSWORD: dolibarr
 
     volumes:
+
+      # Volume persistant contenant les données de MariaDB
+      # Les données restent présentes même si le conteneur est supprimé
       - mariadb_data:/var/lib/mysql
+
+      # Partage du dossier data du projet avec le conteneur
+      # Il contient notamment le fichier tiers.csv
       - ../data:/data
 
-
+  # Application Dolibarr
+  
   dolibarr:
+
+    # Image Docker officielle utilisée pour Dolibarr
     image: dolibarr/dolibarr:latest
+
+    # Nom du conteneur Dolibarr
     container_name: sae-dolibarr-app
+
+    # Redémarre automatiquement
     restart: unless-stopped
 
+    # Indique que Dolibarr dépend du service MariaDB
+    # MariaDB est donc lancé avant Dolibarr
     depends_on:
       - mariadb
 
+    # Redirection du port 8080 du PC vers le port 80 du conteneur
+    # Dolibarr est donc accessible sur http://localhost:8080
     ports:
       - "8080:80"
 
+    # Informations permettant à Dolibarr de se connecter à MariaDB
     environment:
+
+      # "mariadb" correspond au nom du service défini
       DOLI_DB_HOST: mariadb
+
+      # Nom de la base de données utilisée par Dolibarr
       DOLI_DB_NAME: dolibarr
+
+      # Utilisateur utilisé pour se connecter à la base
       DOLI_DB_USER: dolibarr
+
+      # Mot de passe de cet utilisateur
       DOLI_DB_PASSWORD: dolibarr
 
     volumes:
+
       - dolibarr_documents:/var/www/documents
 
 
+# Déclaration des volumes
+
 volumes:
+
+  # Stockage persistant de la base MariaDB
   mariadb_data:
+
+  # Stockage persistant des documents Dolibarr
   dolibarr_documents:

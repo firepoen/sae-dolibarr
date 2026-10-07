@@ -1,18 +1,18 @@
 #!/bin/bash
 
+# Arrête le script si une commande échoue
 set -e
 
+# Dossier contenant les sauvegardes
 BACKUP_DIR="./backups"
 
-echo "================================="
-echo " Restauration SAE51 - Dolibarr"
-echo "================================="
+echo "Restauration de Dolibarr"
 
-# Recherche des sauvegardes les plus récentes
+# Récupère les sauvegardes les plus récentes
 DB_BACKUP=$(ls -t "$BACKUP_DIR"/dolibarr_db_*.sql 2>/dev/null | head -n 1)
 DOC_BACKUP=$(ls -t "$BACKUP_DIR"/dolibarr_documents_*.tar.gz 2>/dev/null | head -n 1)
 
-# Vérification des sauvegardes
+# Vérifie que les sauvegardes existent
 if [ -z "$DB_BACKUP" ]; then
     echo "Erreur : aucune sauvegarde MariaDB trouvée."
     exit 1
@@ -23,26 +23,17 @@ if [ -z "$DOC_BACKUP" ]; then
     exit 1
 fi
 
-echo "Sauvegarde BDD utilisée : $DB_BACKUP"
-echo "Sauvegarde documents utilisée : $DOC_BACKUP"
-
-echo ""
 echo "Restauration de la base MariaDB..."
 
+# Envoie la sauvegarde SQL dans MariaDB
 cat "$DB_BACKUP" | docker exec -i sae-dolibarr-db \
     mariadb -u dolibarr -pdolibarr dolibarr
 
-echo "Base de données restaurée."
+echo "Base restaurée."
 
-echo ""
-echo "Restauration des documents Dolibarr..."
-
+# Restaure les documents dans Dolibarr
 cat "$DOC_BACKUP" | docker exec -i sae-dolibarr-app \
     tar xzf - -C /var/www/documents
 
 echo "Documents restaurés."
-
-echo ""
-echo "================================="
-echo " Restauration terminée"
-echo "================================="
+echo "Restauration terminée."
